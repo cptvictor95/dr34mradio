@@ -1,44 +1,49 @@
-import { signIn, signOut, useSession } from "next-auth/react";
+import type { Session } from "next-auth";
+import { signOut } from "next-auth/react";
 import Image from "next/image";
+import { SignOut } from "phosphor-react";
 
-export const AuthShowcase: React.FC = () => {
-  const { data: sessionData } = useSession();
-
+export const AuthShowcase: React.FC<{ sessionData: Session }> = ({
+  sessionData,
+}) => {
   return (
-    <div className="z-10 flex flex-row items-center justify-center gap-4 rounded-full px-4 py-2 hover:cursor-pointer hover:backdrop-brightness-75">
+    <section className="z-10 flex flex-row items-center justify-center gap-4 rounded-full py-3 px-5 hover:cursor-pointer hover:backdrop-brightness-75">
       {sessionData && <span>{sessionData.user?.name}</span>}
-      <div className="dropdown-bottom dropdown-end dropdown avatar z-10">
+      <div className="dropdown-bottom dropdown-end dropdown z-10">
         <div tabIndex={0} className="rounded-full">
           {sessionData ? (
             <Image
               alt={`${sessionData.user?.name}'s avatar`}
-              width="48"
-              height="48"
+              width="32"
+              height="32"
               src={sessionData.user?.image as string}
+              className="avatar max-h-48 min-w-max rounded-full"
             />
           ) : (
             <Image
               alt={`Random user's avatar`}
-              width="48"
-              height="48"
+              width="32"
+              height="32"
               src="/user-placeholder.jpg"
+              className="avatar max-h-48 min-w-max rounded-full"
             />
           )}
         </div>
         <ul
           tabIndex={0}
-          className="dropdown-content menu rounded-box border-2 border-gray-800 bg-gray-800 p-2"
+          className="dropdown-content menu rounded-box bg-gray-800 p-2"
         >
           <li>
             <button
-              className="min-w-max rounded-lg px-10 py-3 font-semibold text-white no-underline transition hover:bg-gray-900"
-              onClick={sessionData ? () => signOut() : () => signIn()}
+              className="btn flex min-w-max gap-2 rounded-lg px-5 py-3 font-semibold text-white no-underline transition hover:bg-gray-900"
+              onClick={() => signOut()}
             >
-              {sessionData ? "Sign out" : "Sign in"}
+              <SignOut size={20} weight="bold" />
+              Sign out
             </button>
           </li>
         </ul>
       </div>
-    </div>
+    </section>
   );
 };
