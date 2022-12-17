@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { trpc } from "../utils/trpc";
 
 export type QueriesTypesYT = "TEXT" | "LINK";
@@ -55,28 +55,22 @@ export default YTQueryBox;
 
 const InputBox = ({ ytQueryResponseData, setKeywordString }) => {
   const postVideo = trpc.videos.postVideo.useMutation();
-  const [query, setQuery] = useState("");
-  const [ytQueryType, setYTQueryType] = useState<QueriesTypesYT>("TEXT");
-
-  const handleChange = (key: string) => {
-    setQuery(key);
-    /* setYTResults(ytQueryResponseData); */
-    /* TODO chamar a fun*/
-  };
+  const ytQueryType = useRef<QueriesTypesYT>("TEXT");
+  const query = useRef("");
 
   const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    switch (ytQueryType) {
+    switch (ytQueryType.current) {
       case "TEXT":
-        setKeywordString(query);
+        setKeywordString(query.current);
         break;
       case "LINK":
-        const ytVideoID = getIDFromYTURL(query);
+        const ytVideoID = getIDFromYTURL(query.current);
         /* fetch name, duration yt api */
         postVideo.mutate({
           name: "asd",
-          link: query,
+          link: query.current,
           ytID: ytVideoID,
         });
         break;
@@ -84,45 +78,18 @@ const InputBox = ({ ytQueryResponseData, setKeywordString }) => {
         break;
     }
 
-    setQuery("");
   };
-
-  function handleSelectQuery(e: React.ChangeEvent<HTMLSelectElement>) {
-    if (e.target.value === "Texto" && ytQueryType === "LINK") {
-      setYTQueryType("TEXT");
-      setQuery("");
-    } else {
-      setYTQueryType("LINK");
-      setQuery("");
-    }
-  }
 
   return (
     <div className="form-control">
       <div className="input-group flex-col">
         <div className="flex gap-2">
-          <select
-            onChange={(e) => handleSelectQuery(e)}
-            className="select-bordered select text-white"
-          >
-            <option disabled>Tipo de busca</option>
-            <option defaultValue="true">Texto</option>
-            <option>Link</option>
-          </select>
+          <QueryTypeSelector ytQueryTypeRef={ytQueryType} />
           <div className="flex flex-col">
-            <input
-              type="text"
-              placeholder="Busca…"
-              onChange={(e) => handleChange(e.target.value)}
-              value={query}
-              className="input-bordered input text-white"
-            />
-
-            {ytQueryType === "TEXT" ? (
+            <TextQueryBox queryRef={query} />
+            {ytQueryType.current === "TEXT" ? (
               <CompletionResults
                 ytResults={ytQueryResponseData}
-                query={query}
-                setQuery={setQuery}
                 postVideo={postVideo}
               />
             ) : null}
@@ -133,6 +100,47 @@ const InputBox = ({ ytQueryResponseData, setKeywordString }) => {
     </div>
   );
 };
+
+const QueryTypeSelector: React.FC<{ ytQueryTypeRef: any }> = ({ ytQueryTypeRef }) => {
+  const [ytQueryType, setYTQueryType] = useState<QueriesTypesYT>("TEXT");
+
+  function handleSelectQuery(e: React.ChangeEvent<HTMLSelectElement>) {
+    if (e.target.value === "Texto" && ytQueryType === "LINK") {
+      setYTQueryType("TEXT");
+      ytQueryTypeRef.current = "TEXT";
+    } else {
+      setYTQueryType("LINK");
+      ytQueryTypeRef.current = "LINK";
+    }
+  }
+
+  return (
+    <select
+      onChange={(e) => handleSelectQuery(e)}
+      className="select-bordered select text-white"
+    >
+      <option disabled>Tipo de busca</option>
+      <option defaultValue="true">Texto</option>
+      <option>Link</option>
+    </select>
+  );
+}
+
+const TextQueryBox: React.FC<{ queryRef: any }> = ({ queryRef }) => {
+  const handleChange = (key: string) => {
+    setQuery(key);
+  };
+  const [query, setQuery] = useState("");
+  return (
+    <input
+      type="text"
+      placeholder="Busca…"
+      onChange={(e) => handleChange(e.target.value)}
+      value={query}
+      className="input-bordered input text-white"
+    />
+  );
+}
 
 const ButtonQueryBox = ({ handleSubmit }) => {
   return (
@@ -155,14 +163,13 @@ const ButtonQueryBox = ({ handleSubmit }) => {
   );
 };
 
-const CompletionItem = ({ result, setQuery, postVideo }) => {
+const CompletionItem = ({ result, postVideo }) => {
   const handleClick = () => {
     postVideo.mutate({
       name: result.snippet.title,
       link: "https://www.youtube.com/watch?v=" + result.id.videoId,
       ytID: result.id.videoId,
     });
-    setQuery("");
   };
 
   const formatTitleString = (text: string) => {
@@ -185,8 +192,8 @@ text-base tracking-tight text-black hover:bg-lime-700"
   );
 };
 
-const CompletionResults = ({ query, setQuery, ytResults, postVideo }) => {
-  if (ytResults === undefined || query == "") return null;
+const CompletionResults = ({ ytResults, postVideo }) => {
+  if (ytResults === undefined) return null;
 
   return (
     <div className="absolute top-16 z-50 flex flex-col">
@@ -196,7 +203,6 @@ const CompletionResults = ({ query, setQuery, ytResults, postVideo }) => {
             key={result.id.videoId}
             postVideo={postVideo}
             result={result}
-            setQuery={setQuery}
           />
         );
       })}
