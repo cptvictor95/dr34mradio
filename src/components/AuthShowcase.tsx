@@ -7,14 +7,21 @@ export const AuthShowcase: React.FC = () => {
   return (
     <div className="z-10 flex flex-row items-center justify-center gap-4 rounded-full px-4 py-2 hover:cursor-pointer hover:backdrop-brightness-75">
       {sessionData && <span>{sessionData.user?.name}</span>}
-      <div className="dropdown-bottom dropdown-end dropdown avatar z-10 w-12">
-        <div tabIndex={0} className="w-12 rounded-full">
-          {sessionData && (
+      <div className="dropdown-bottom dropdown-end dropdown avatar z-10">
+        <div tabIndex={0} className="rounded-full">
+          {sessionData ? (
             <Image
               alt={`${sessionData.user?.name}'s avatar`}
               width="48"
               height="48"
               src={sessionData.user?.image as string}
+            />
+          ) : (
+            <Image
+              alt={`Random user's avatar`}
+              width="48"
+              height="48"
+              src="/user-placeholder.jpg"
             />
           )}
         </div>
