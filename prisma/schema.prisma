@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-provider = "postgresql"
-// provider = "sqlite"
+  provider = "postgresql"
+  // provider = "sqlite"
   // NOTE: When using postgresql, mysql or sqlserver, uncomment the @db.Text annotations in model Account below
   // Further reading:
   // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
@@ -67,12 +67,12 @@ model VerificationToken {
 }
 
 model Video {
-	  id	String	@id @default(cuid())
-	  name	String	@db.VarChar(200)
-	  createdAt		DateTime @default(now())
-	  startedPlayingAt		String @default("")
-	  started				Boolean	 @default(false)
-	  videoDuration			Int		 @default(0)
-	  link			String	@db.VarChar(200)
-	  ytID			String	@db.VarChar(12)
+  id               String   @id @default(cuid())
+  name             String   @db.VarChar(200)
+  createdAt        DateTime @default(now())
+  startedPlayingAt String   @default("")
+  started          Boolean  @default(false)
+  videoDuration    Int      @default(0)
+  link             String   @db.VarChar(200)
+  ytID             String   @db.VarChar(12)
 }

@@ -1,11 +1,12 @@
 import { YTiframe } from "./ytframe";
 import { trpc } from "../utils/trpc";
-import { useState, useEffect, BaseSyntheticEvent } from "react";
+import { useState, useEffect } from "react";
+import type { BaseSyntheticEvent } from "react";
 import { ToggleSound } from "./ToggleSound";
 
 export const VideoPlayer: React.FC = () => {
   // trpc video playlist queue
-  const { data: videos, isLoading, refetch } = trpc.videos.getAll.useQuery();
+  const { data: videos, refetch } = trpc.videos.getAll.useQuery();
   const playVideo = trpc.videos.playVideo.useMutation();
   const deleteVideo = trpc.videos.deleteVideo.useMutation();
   const [videoIndex, setVideoIndex] = useState(0);
@@ -105,9 +106,7 @@ export const VideoPlayer: React.FC = () => {
             />
           </div>
           <ToggleSound videoPlayer={videoPlayer} />
-          <div>
-            lado direito
-          </div>
+          <div>lado direito</div>
         </div>
         <YTiframe
           stateFunction={setPlayerState}
