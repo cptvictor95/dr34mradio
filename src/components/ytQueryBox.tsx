@@ -42,12 +42,10 @@ export function YTQueryBox() {
   });
 
   return (
-    <div className="text-white">
-      <InputBox
-        ytQueryResponseData={ytQueryResponseData}
-        setKeywordString={setKeywordString}
-      />
-    </div>
+    <InputBox
+      ytQueryResponseData={ytQueryResponseData}
+      setKeywordString={setKeywordString}
+    />
   );
 }
 
@@ -136,7 +134,7 @@ const InputBox = ({ ytQueryResponseData, setKeywordString }) => {
 
 const ButtonQueryBox = ({ handleSubmit }) => {
   return (
-    <button onClick={(e) => handleSubmit(e)} className="btn-square btn">
+    <button onClick={(e) => handleSubmit(e)} className="btn btn-square">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         className="h-6 w-6"
