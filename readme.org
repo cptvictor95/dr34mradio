@@ -1,0 +1,19 @@
+* coisas
+** função para enviar o tempo que o vídeo começou a tocar
+*** checar se o tempo é maior do que o tempo de criação
+*** mandar do player
+** criação do video
+*** api youtube
+**** pegar a duração
+**** pegar o nome do vídeo se for adicionado pelo link
+** videos
+*** ver alguma maneira de checar se o vídeo terminou
+**** pela duração do vídeo
+soma com a hora que o vídeo começou
+checa se o now() já passou
+** pesquisa videos
+*** adicionar uma função para rodar depois de alguns segundos
+**** chamar a api
+* montar um contexto
+** colocar as coisas do estado da aplicação
+
