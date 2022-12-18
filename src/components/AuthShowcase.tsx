@@ -6,28 +6,25 @@ import { SignOut } from "phosphor-react";
 export const AuthShowcase: React.FC<{ sessionData: Session }> = ({
   sessionData,
 }) => {
+  console.log("USER", sessionData.user);
   return (
     <section className="z-10 flex flex-row items-center justify-center gap-4 rounded-full py-3 px-5 hover:cursor-pointer hover:backdrop-brightness-75">
       {sessionData && <span>{sessionData.user?.name}</span>}
       <div className="dropdown-bottom dropdown-end dropdown z-10">
         <div tabIndex={0} className="rounded-full">
-          {sessionData ? (
-            <Image
-              alt={`${sessionData.user?.name}'s avatar`}
-              width="32"
-              height="32"
-              src={sessionData.user?.image as string}
-              className="avatar max-h-48 min-w-max rounded-full"
-            />
-          ) : (
-            <Image
-              alt={`Random user's avatar`}
-              width="32"
-              height="32"
-              src="/user-placeholder.jpg"
-              className="avatar max-h-48 min-w-max rounded-full"
-            />
-          )}
+          <Image
+            alt={`${
+              sessionData ? sessionData.user?.name : "Random user"
+            }'s avatar`}
+            width="32"
+            height="32"
+            src={
+              sessionData
+                ? (sessionData.user?.image as string)
+                : "/user-placeholder.jpg"
+            }
+            className="avatar max-h-48 min-w-max rounded-full"
+          />
         </div>
         <ul
           tabIndex={0}
