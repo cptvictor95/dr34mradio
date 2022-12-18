@@ -1,22 +1,23 @@
-import { useState,useContext } from "react";
+import { useState, useContext } from "react";
 import PlayerContext from "../contexts/PlayerContext";
 
 export const ToggleSound: React.FC<{}> = ({}) => {
-    const [mute, setMute] = useState(true);
     const player = useContext(PlayerContext);
-    function toggleSound() {
-        player.toggleMute()
-        setMute(!mute);
+    const [mute, setMute] = useState<boolean>(player.isMuted.current);
+
+    function toggleMute() {
+        if (player.videoPlayer != null) {
+            player.toggleMute();
+            setMute(!mute);
+        }
     }
 
     return (
-        <div className="grow"
-        onClick={toggleSound}
-    >
-<div className="absolute inset-1/2">
-        {mute ? <AudioOffIcon /> : null}
-    </div>
-    </div>
+        <div className="grow" onClick={toggleMute}>
+            <div className="absolute inset-1/2">
+                {mute ? <AudioOffIcon /> : null}
+            </div>
+        </div>
     );
 };
 

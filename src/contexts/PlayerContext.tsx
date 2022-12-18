@@ -1,9 +1,13 @@
 import React, { createContext, useRef } from "react";
+import { trpc } from "../utils/trpc";
 const PlayerContext = createContext<any>({});
 
 export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { data: videos, refetch } = trpc.videos.getAll.useQuery();
     const videoPlayer = useRef<YT.Player | null>(null);
     const playerState = useRef<YT.PlayerState | null>(null);
+    const mute = useRef<boolean>(true);
+    const volume = useRef<number>(15);
 
     const playerVars: YT.PlayerVars = {
         mute: 1,
@@ -14,12 +18,37 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         autoplay: 1,
     };
 
+    // these dimensions will be used later to set the player size
+    // and change things if we are on mobile
+    const width = () => {
+        if (typeof window != "object") {
+            return "640";
+        } else {
+            return window.innerWidth;
+        }
+    };
+
+    const height = () => {
+        if (typeof window != "object") {
+            return "360";
+        } else {
+            return (9 * window.innerHeight) / 10;
+        }
+    };
+
+    // gets the id of the head of videos queue
+    function headVideoID() {
+        if (videos && videos.length > 0) {
+            return videos[0].ytID;
+        } else {
+            return "M7lc1UVf-VE";
+        }
+    }
+
     const playerOptions: YT.PlayerOptions = {
-        // height: (9 * window.innerHeight) / 10,
-        // width: window.innerWidth,
-        height: '360',
-        width: '640',
-        videoId: "",
+        height: height(),
+        width: width(),
+        videoId: headVideoID(),
         events: {
             onReady: onPlayerReady,
             onStateChange: onPlayerStateChange,
@@ -28,12 +57,13 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
 
     function onPlayerReady(event) {
-        event.target.setVolume(15);
+        event.target.setVolume(volume.current);
         event.target.playVideo();
     }
 
     function onPlayerStateChange(event) {
         playerState.current = event.data;
+        console.log("state", playerState.current);
     }
 
 
@@ -48,6 +78,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (videoPlayer.current) {
             videoPlayer.current.isMuted() ? videoPlayer.current.unMute() : videoPlayer.current.mute();
         }
+        mute.current = !mute.current;
     };
 
     // change volume based on input value
@@ -65,9 +96,11 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             videoPlayer: videoPlayer,
             playVideo: playVideo,
             toggleMute: toggleMute,
+            isMuted: mute,
             changeVolume: changeVolume,
             options: playerOptions,
-            state: playerState
+            state: playerState,
+            videos: videos,
         }}>
             {children}
         </PlayerContext.Provider>

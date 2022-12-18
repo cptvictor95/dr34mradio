@@ -9,7 +9,7 @@ import { VolumeBar } from "./VolumeBar";
 export const VideoPlayer: React.FC = () => {
   const player = useContext(PlayerContext);
   // trpc video playlist queue
-  const { data: videos, refetch } = trpc.videos.getAll.useQuery();
+  const { data: videos, isLoading, refetch } = trpc.videos.getAll.useQuery();
   const playVideo = trpc.videos.playVideo.useMutation();
   const deleteVideo = trpc.videos.deleteVideo.useMutation();
 
@@ -64,11 +64,9 @@ export const VideoPlayer: React.FC = () => {
           id: videos[0].id,
         });
         refetch();
-        setStarted(false);
       }
-      if (player.state.current === window.YT.PlayerState.UNSTARTED && !started) {
+      if (player.state.current === window.YT.PlayerState.UNSTARTED) {
         player.playVideo(videos[0].ytID);
-        setStarted(true);
         console.log("videos", videos);
       }
     }
@@ -85,7 +83,14 @@ export const VideoPlayer: React.FC = () => {
           <ToggleSound />
           <div>lado direito</div>
         </div>
-        <YTiframe />
+        {!isLoading ?
+          <YTiframe />
+          :
+          <div className="flex flex-col items-center justify-center">
+            <h1 className="text-2xl">No videos in queue</h1>
+            <h2 className="text-xl">Add some videos to the queue</h2>
+            </div>}
+        
       </div>
     </div>
   );
