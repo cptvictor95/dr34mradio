@@ -1,6 +1,5 @@
 import type { Video } from "@prisma/client";
 import type { QueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/router";
 import { Trash } from "phosphor-react";
 import { trpc } from "../utils/trpc";
 
@@ -35,7 +34,6 @@ export const VideoPlaylistItem: React.FC<{
       updateCache({ client, data });
     },
   });
-  const router = useRouter();
 
   const onDeleteVideo = (id: string) => {
     mutateAsync({
@@ -44,13 +42,15 @@ export const VideoPlaylistItem: React.FC<{
   };
 
   return (
-    <li
-      className="btn-group-horizontal btn-group min-w-max text-white"
-      key={video.id}
-    >
-      <button className="btn px-5 py-1" onClick={() => router.push(video.link)}>
-        {video.name}
-      </button>
+    <li className="btn-group-horizontal btn-group text-white" key={video.id}>
+      <a
+        className="btn flex flex-grow px-3 py-1"
+        href={video.link}
+        target="_blank"
+        rel="noreferrer"
+      >
+        <span className="ml-0 mr-auto">{video.name}</span>
+      </a>
       <button
         className="btn btn-error py-1"
         onClick={() => onDeleteVideo(video.id)}
