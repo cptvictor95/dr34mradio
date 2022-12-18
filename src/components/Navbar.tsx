@@ -6,7 +6,7 @@ import YTQueryBox from "./ytQueryBox";
 
 export const Navbar: React.FC = () => {
   const router = useRouter();
-  const { data: sessionData } = useSession();
+  const { data: sessionData, status } = useSession();
 
   return (
     <nav className="navbar py-0 px-10 text-white">
@@ -24,13 +24,15 @@ export const Navbar: React.FC = () => {
             <VideoPlaylist />
             <AuthShowcase sessionData={sessionData} />
           </>
-        ) : (
+        ) : status !== "loading" ? (
           <button
-            className="btn btn-accent min-w-max rounded-lg px-5 py-3 font-semibold text-white"
+            className="btn-accent btn min-w-max rounded-lg px-5 py-3 font-semibold text-white"
             onClick={() => signIn()}
           >
             Sign In
           </button>
+        ) : (
+          ""
         )}
       </section>
     </nav>
