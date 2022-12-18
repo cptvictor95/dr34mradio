@@ -1,41 +1,10 @@
 import React, { useState } from "react";
+import { getIDFromYTURL } from "../lib/getIDFromYTURL";
+import type { YTQueryType } from "../types/YTQueryType";
+import type { ResultItem, YTResult } from "../types/YTResult";
 import { trpc } from "../utils/trpc";
 
-export type QueriesTypesYT = "TEXT" | "LINK";
-
-function getIDFromYTURL(url: string) {
-  const regExp =
-    /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-  const match = url.match(regExp);
-  if (match && match[2] && match[2].length == 11) {
-    return match[2];
-  } else {
-    //error
-    console.log("url inválida");
-    return "";
-  }
-}
-
-export type YTResult = {
-  etag: string;
-  id: {
-    kind: string;
-    videoId: string;
-  };
-  kind: string;
-  snippet: {
-    channelId: string;
-    channelTitle: string;
-    description: string;
-    liveBroadcastContent: string;
-    publishTime: string;
-    publishedAt: string;
-    thumbnails: string;
-    title: string;
-  };
-};
-
-export function YTQueryBox() {
+const YTQueryBox: React.FC = () => {
   const [keywordString, setKeywordString] = useState("");
   const { data: ytQueryResponseData } = trpc.yt.queryYTVideos.useQuery({
     query: keywordString,
@@ -47,14 +16,17 @@ export function YTQueryBox() {
       setKeywordString={setKeywordString}
     />
   );
-}
+};
 
 export default YTQueryBox;
 
-const InputBox = ({ ytQueryResponseData, setKeywordString }) => {
+const InputBox: React.FC<{
+  ytQueryResponseData: YTResult;
+  setKeywordString: React.Dispatch<React.SetStateAction<string>>;
+}> = ({ ytQueryResponseData, setKeywordString }) => {
   const postVideo = trpc.videos.postVideo.useMutation();
   const [query, setQuery] = useState("");
-  const [ytQueryType, setYTQueryType] = useState<QueriesTypesYT>("TEXT");
+  const [ytQueryType, setYTQueryType] = useState<YTQueryType>("TEXT");
 
   const handleChange = (key: string) => {
     setQuery(key);
@@ -85,7 +57,7 @@ const InputBox = ({ ytQueryResponseData, setKeywordString }) => {
     setQuery("");
   };
 
-  function handleSelectQuery(e: React.ChangeEvent<HTMLSelectElement>) {
+  const handleSelectQuery = (e: React.ChangeEvent<HTMLSelectElement>) => {
     if (e.target.value === "Texto" && ytQueryType === "LINK") {
       setYTQueryType("TEXT");
       setQuery("");
@@ -93,7 +65,7 @@ const InputBox = ({ ytQueryResponseData, setKeywordString }) => {
       setYTQueryType("LINK");
       setQuery("");
     }
-  }
+  };
 
   return (
     <div className="form-control">
@@ -132,9 +104,11 @@ const InputBox = ({ ytQueryResponseData, setKeywordString }) => {
   );
 };
 
-const ButtonQueryBox = ({ handleSubmit }) => {
+const ButtonQueryBox: React.FC<{
+  handleSubmit: (e: React.MouseEvent<HTMLButtonElement>) => void;
+}> = ({ handleSubmit }) => {
   return (
-    <button onClick={(e) => handleSubmit(e)} className="btn btn-square">
+    <button onClick={(e) => handleSubmit(e)} className="btn-square btn">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         className="h-6 w-6"
@@ -153,7 +127,11 @@ const ButtonQueryBox = ({ handleSubmit }) => {
   );
 };
 
-const CompletionItem = ({ result, setQuery, postVideo }) => {
+const CompletionItem: React.FC<{
+  result: ResultItem;
+  setQuery: (value: React.SetStateAction<string>) => void;
+  postVideo: any;
+}> = ({ result, setQuery, postVideo }) => {
   const handleClick = () => {
     postVideo.mutate({
       name: result.snippet.title,
@@ -183,7 +161,12 @@ text-base tracking-tight text-black hover:bg-lime-700"
   );
 };
 
-const CompletionResults = ({ query, setQuery, ytResults, postVideo }) => {
+const CompletionResults: React.FC<{
+  query: string;
+  setQuery: (value: React.SetStateAction<string>) => void;
+  ytResults: YTResult;
+  postVideo: any;
+}> = ({ query, setQuery, ytResults, postVideo }) => {
   if (ytResults === undefined || query == "") return null;
 
   return (
