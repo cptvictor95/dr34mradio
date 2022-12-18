@@ -7,10 +7,7 @@ declare global {
   }
 }
 
-export const YTiframe: React.FC<{
-  stateFunction: any;
-  setVideoPlayer: any;
-}> = ({ stateFunction, setVideoPlayer }) => {
+export const YTiframe: React.FC<{}> = ({}) => {
   const player = useContext(PlayerContext);
 
   useEffect(() => {
@@ -23,7 +20,7 @@ export const YTiframe: React.FC<{
       // esta função precisa ter este nome e ser global para funcionar
       window.onYouTubePlayerAPIReady = () => {
         const ytframe = "ytplayer";
-        player.videoPlayer.current = new window.YT.Player(ytframe, player.playerOptions);
+        player.videoPlayer.current = new window.YT.Player(ytframe, player.options);
       };
     }
 
