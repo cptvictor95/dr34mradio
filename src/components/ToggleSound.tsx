@@ -1,12 +1,11 @@
-import { useState } from "react";
-export const ToggleSound: React.FC<{videoPlayer: any}> = ({videoPlayer}) => {
+import { useState,useContext } from "react";
+import PlayerContext from "../contexts/PlayerContext";
+
+export const ToggleSound: React.FC<{}> = ({}) => {
     const [mute, setMute] = useState(true);
+    const player = useContext(PlayerContext);
     function toggleSound() {
-        if (mute) {
-            videoPlayer.unMute();
-        } else {
-            videoPlayer.mute();
-        }
+        player.toggleMute()
         setMute(!mute);
     }
 
