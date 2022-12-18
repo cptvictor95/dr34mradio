@@ -4,8 +4,11 @@ const PlayerContext = createContext<any>({});
 
 export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { data: videos, refetch } = trpc.videos.getAll.useQuery();
+    const sendPlayVideo = trpc.videos.playVideo.useMutation();
+    const deleteVideo = trpc.videos.deleteVideo.useMutation();
     const videoPlayer = useRef<YT.Player | null>(null);
     const playerState = useRef<YT.PlayerState | null>(null);
+    const playerInSync = useRef<boolean>(false);
     const mute = useRef<boolean>(true);
     const volume = useRef<number>(15);
 
@@ -45,6 +48,23 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     }
 
+    // function that returns the current playing video length using the youtube js api
+    function currentVideoLength() {
+        if (videoPlayer.current) {
+            return videoPlayer.current.getDuration();
+        } else {
+            return 0;
+        }
+    }
+
+    function currentVideoTime() {
+        if (videoPlayer.current) {
+            return videoPlayer.current.getCurrentTime();
+        } else {
+            return 0;
+        }
+    }
+
     const playerOptions: YT.PlayerOptions = {
         height: height(),
         width: width(),
@@ -64,8 +84,53 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     function onPlayerStateChange(event) {
         playerState.current = event.data;
         console.log("state", playerState.current);
-    }
+        /* started playing */
+        if (playerState.current === window.YT.PlayerState.PLAYING) {
+            /* checks if the video has started */
+            if (videos[0]?.started && !playerInSync.current) {
+                /* jumps to current position */
+                /* gets startedPlayingAt */
+                /* and compares it with now */
+                let videoTime = Date.now() - Number(videos[0]?.startedPlayingAt);
+                videoTime = videoTime / 1000;
+                /* send it to player */
+                videoPlayer.current.seekTo(videoTime, true);
+                playerInSync.current = true;
+            } else if (videos[0].started === false) {
+                /* video hasn't started */
+                /* sends starting time to api */
+                /* changes video state to started */
+                sendPlayVideo.mutate({
+                    id: videos[0].id,
+                    startedPlayingAt: Date.now(),
+                });
+            }
+        }
 
+        /* video player finished playing */
+        if (playerState.current === window.YT.PlayerState.ENDED &&
+            videos[1]) {
+            /* play next video */
+            videoPlayer.current.loadVideoById(videos[1].ytID);
+            /* delete previous video */
+            deleteVideo.mutate({
+                id: videos[0].id,
+            });
+            /* TODO checks if it was successful */
+            /* TODO resets queue index */
+            refetch();
+        } else if (playerState.current === window.YT.PlayerState.ENDED &&
+            videos[0]) {
+            deleteVideo.mutate({
+                id: videos[0].id,
+            });
+            refetch();
+        }
+        if (playerState.current === window.YT.PlayerState.UNSTARTED) {
+            videoPlayer.current.loadVideoById(videos[0].ytID);
+            console.log("videos", videos);
+        }
+    }
 
     // play video using yt iframe ref
     const playVideo = (videoID: string) => {
@@ -98,6 +163,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             toggleMute: toggleMute,
             isMuted: mute,
             changeVolume: changeVolume,
+            getVolume: videoPlayer.current ? videoPlayer.current.getVolume() : 0,
             options: playerOptions,
             state: playerState,
             videos: videos,
