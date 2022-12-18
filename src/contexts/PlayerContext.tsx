@@ -1,9 +1,11 @@
 import React, { createContext, useRef } from "react";
 import { trpc } from "../utils/trpc";
+// TODO refactor this with the correct types
 const PlayerContext = createContext<any>({});
 
+
 export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { data: videos, refetch } = trpc.videos.getAll.useQuery();
+    const { data: videos, isLoading, refetch } = trpc.videos.getAll.useQuery();
     const sendPlayVideo = trpc.videos.playVideo.useMutation();
     const deleteVideo = trpc.videos.deleteVideo.useMutation();
     const videoPlayer = useRef<YT.Player | null>(null);
