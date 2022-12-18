@@ -1,37 +1,30 @@
 import { YTiframe } from "./ytframe";
 import { trpc } from "../utils/trpc";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import type { BaseSyntheticEvent } from "react";
 import { ToggleSound } from "./ToggleSound";
+import PlayerContext from "../contexts/PlayerContext";
+import { VolumeBar } from "./VolumeBar";
 
 export const VideoPlayer: React.FC = () => {
+  const player = useContext(PlayerContext);
   // trpc video playlist queue
   const { data: videos, refetch } = trpc.videos.getAll.useQuery();
   const playVideo = trpc.videos.playVideo.useMutation();
   const deleteVideo = trpc.videos.deleteVideo.useMutation();
-  const [videoIndex, setVideoIndex] = useState(0);
 
   // video player states
-  const [playerState, setPlayerState] = useState<YT.PlayerState>(-2);
   const [playerInSync, setPlayerInSync] = useState(false);
-  const [videoPlayer, setVideoPlayer] = useState<YT.Player | null>();
   const [started, setStarted] = useState(false);
 
-  function handleVolume(e: BaseSyntheticEvent) {
-    if (videoPlayer != null) {
-      videoPlayer.setVolume(e.target.value);
-    }
-  }
-
   useEffect(() => {
-    if (
-      videos &&
-      videos.length > 0 &&
-      videoPlayer != null &&
-      typeof window === "object"
-    ) {
+    console.log("estado", player.state.current)
+    if (videos
+      && videos.length > 0
+      && typeof window === "object") {
+
       /* started playing */
-      if (playerState === window.YT.PlayerState.PLAYING) {
+      if (player.state.current === window.YT.PlayerState.PLAYING) {
         /* checks if the video has started */
         if (videos[0]?.started && !playerInSync) {
           /* jumps to current position */
@@ -40,7 +33,7 @@ export const VideoPlayer: React.FC = () => {
           let videoTime = Date.now() - Number(videos[0]?.startedPlayingAt);
           videoTime = videoTime / 1000;
           /* send it to player */
-          videoPlayer.seekTo(videoTime, true);
+          player.videoPlayer.current.seekTo(videoTime, true);
           setPlayerInSync(true);
         } else if (videos[0].started === false) {
           /* video hasn't started */
@@ -54,42 +47,32 @@ export const VideoPlayer: React.FC = () => {
       }
 
       /* video player finished playing */
-      if (
-        playerState === window.YT.PlayerState.ENDED &&
-        videos[videoIndex + 1]
-      ) {
-        /* increment videos index */
-        setVideoIndex(videoIndex + 1);
+      if (player.state.current === window.YT.PlayerState.ENDED &&
+        videos[1]) {
         /* play next video */
-        videoPlayer.loadVideoById({
-          videoId: videos[videoIndex + 1].ytID,
-        });
+        player.playVideo(videos[1].ytID);
         /* delete previous video */
         deleteVideo.mutate({
-          id: videos[videoIndex].id,
+          id: videos[0].id,
         });
         /* TODO checks if it was successful */
         /* TODO resets queue index */
         refetch();
-      } else if (
-        playerState === window.YT.PlayerState.ENDED &&
-        videos[videoIndex]
-      ) {
+      } else if (player.state.current === window.YT.PlayerState.ENDED &&
+        videos[0]) {
         deleteVideo.mutate({
-          id: videos[videoIndex].id,
+          id: videos[0].id,
         });
         refetch();
         setStarted(false);
       }
-      if (playerState === window.YT.PlayerState.UNSTARTED && !started) {
-        videoPlayer.loadVideoById({
-          videoId: videos[0].ytID,
-        });
+      if (player.state.current === window.YT.PlayerState.UNSTARTED && !started) {
+        player.playVideo(videos[0].ytID);
         setStarted(true);
         console.log("videos", videos);
       }
     }
-  }, [playerState]);
+  }, [player.state.current]);
 
   return (
     <div className="flex grow flex-row items-center justify-items-center">
@@ -97,22 +80,15 @@ export const VideoPlayer: React.FC = () => {
         <div className="absolute flex h-full w-full">
           <div>
             ladoesquerdo
-            <input
-              onChange={(e) => handleVolume(e)}
-              type="range"
-              min="0"
-              max="100"
-              className="range"
-            />
+            <VolumeBar />
           </div>
-          <ToggleSound videoPlayer={videoPlayer} />
+          <ToggleSound />
           <div>lado direito</div>
         </div>
-        <YTiframe
-          stateFunction={setPlayerState}
-          setVideoPlayer={setVideoPlayer}
-        />
+        <YTiframe />
       </div>
     </div>
   );
 };
+
+
