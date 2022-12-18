@@ -1,41 +1,10 @@
 import React, { useState, useRef } from "react";
+import { getIDFromYTURL } from "../lib/getIDFromYTURL";
+import type { YTQueryType } from "../types/YTQueryType";
+import type { ResultItem, YTResult } from "../types/YTResult";
 import { trpc } from "../utils/trpc";
 
-export type QueriesTypesYT = "TEXT" | "LINK";
-
-function getIDFromYTURL(url: string) {
-  const regExp =
-    /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-  const match = url.match(regExp);
-  if (match && match[2] && match[2].length == 11) {
-    return match[2];
-  } else {
-    //error
-    console.log("url inválida");
-    return "";
-  }
-}
-
-export type YTResult = {
-  etag: string;
-  id: {
-    kind: string;
-    videoId: string;
-  };
-  kind: string;
-  snippet: {
-    channelId: string;
-    channelTitle: string;
-    description: string;
-    liveBroadcastContent: string;
-    publishTime: string;
-    publishedAt: string;
-    thumbnails: string;
-    title: string;
-  };
-};
-
-export function YTQueryBox() {
+const YTQueryBox: React.FC = () => {
   const [keywordString, setKeywordString] = useState("");
   const { data: ytQueryResponseData } = trpc.yt.queryYTVideos.useQuery({
     query: keywordString,
@@ -47,13 +16,16 @@ export function YTQueryBox() {
       setKeywordString={setKeywordString}
     />
   );
-}
+};
 
 export default YTQueryBox;
 
-const InputBox = ({ ytQueryResponseData, setKeywordString }) => {
+const InputBox: React.FC<{
+  ytQueryResponseData: YTResult;
+  setKeywordString: React.Dispatch<React.SetStateAction<string>>;
+}> = ({ ytQueryResponseData, setKeywordString }) => {
   const postVideo = trpc.videos.postVideo.useMutation();
-  const ytQueryType = useRef<QueriesTypesYT>("TEXT");
+  const ytQueryType = useRef<YTQueryType>("TEXT");
   const query = useRef("");
 
   const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -75,7 +47,6 @@ const InputBox = ({ ytQueryResponseData, setKeywordString }) => {
       default:
         break;
     }
-
   };
 
   return (
@@ -87,7 +58,7 @@ const InputBox = ({ ytQueryResponseData, setKeywordString }) => {
             <TextQueryBox queryRef={query} />
             {ytQueryType.current === "TEXT" ? (
               <CompletionResults
-                ytResults={ytQueryResponseData}
+                ytResult={ytQueryResponseData}
                 postVideo={postVideo}
               />
             ) : null}
@@ -99,8 +70,10 @@ const InputBox = ({ ytQueryResponseData, setKeywordString }) => {
   );
 };
 
-const QueryTypeSelector: React.FC<{ ytQueryTypeRef: any }> = ({ ytQueryTypeRef }) => {
-  const [ytQueryType, setYTQueryType] = useState<QueriesTypesYT>("TEXT");
+const QueryTypeSelector: React.FC<{ ytQueryTypeRef: any }> = ({
+  ytQueryTypeRef,
+}) => {
+  const [ytQueryType, setYTQueryType] = useState<YTQueryType>("TEXT");
 
   function handleSelectQuery(e: React.ChangeEvent<HTMLSelectElement>) {
     if (e.target.value === "Texto" && ytQueryType === "LINK") {
@@ -122,7 +95,7 @@ const QueryTypeSelector: React.FC<{ ytQueryTypeRef: any }> = ({ ytQueryTypeRef }
       <option>Link</option>
     </select>
   );
-}
+};
 
 const TextQueryBox: React.FC<{ queryRef: any }> = ({ queryRef }) => {
   const handleChange = (key: string) => {
@@ -138,11 +111,11 @@ const TextQueryBox: React.FC<{ queryRef: any }> = ({ queryRef }) => {
       className="input-bordered input text-white"
     />
   );
-}
+};
 
 const ButtonQueryBox = ({ handleSubmit }) => {
   return (
-    <button onClick={(e) => handleSubmit(e)} className="btn btn-square">
+    <button onClick={(e) => handleSubmit(e)} className="btn-square btn">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         className="h-6 w-6"
@@ -161,7 +134,10 @@ const ButtonQueryBox = ({ handleSubmit }) => {
   );
 };
 
-const CompletionItem = ({ result, postVideo }) => {
+const CompletionItem: React.FC<{
+  result: ResultItem;
+  postVideo: any;
+}> = ({ result, postVideo }) => {
   const handleClick = () => {
     postVideo.mutate({
       name: result.snippet.title,
@@ -190,12 +166,15 @@ text-base tracking-tight text-black hover:bg-lime-700"
   );
 };
 
-const CompletionResults = ({ ytResults, postVideo }) => {
-  if (ytResults === undefined) return null;
+const CompletionResults: React.FC<{
+  ytResult: YTResult;
+  postVideo: any;
+}> = ({ ytResult, postVideo }) => {
+  if (ytResult === undefined) return null;
 
   return (
     <div className="absolute top-16 z-50 flex flex-col">
-      {ytResults.items.map((result) => {
+      {ytResult.items.map((result) => {
         return (
           <CompletionItem
             key={result.id.videoId}
