@@ -100,6 +100,7 @@ const QueryTypeSelector: React.FC<{ ytQueryTypeRef: any }> = ({
 const TextQueryBox: React.FC<{ queryRef: any }> = ({ queryRef }) => {
   const handleChange = (key: string) => {
     setQuery(key);
+    queryRef.current = key;
   };
   const [query, setQuery] = useState("");
   return (
