@@ -1,10 +1,11 @@
 import { useState, useContext } from "react";
 import PlayerContext from "../contexts/PlayerContext";
 
-export const ToggleSound: React.FC<{}> = ({}) => {
+export const ToggleSound: React.FC = () => {
     const player = useContext(PlayerContext);
+    // TODO send this state to the player context so that it can be used in the volume bar
     const [mute, setMute] = useState<boolean>(player.isMuted.current);
-
+    
     function toggleMute() {
         if (player.videoPlayer != null) {
             player.toggleMute();

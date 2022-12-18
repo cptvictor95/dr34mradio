@@ -1,10 +1,14 @@
 import { type NextPage } from "next";
 import Head from "next/head";
+import { useContext } from "react";
 import Link from "next/link";
 import { Navbar } from "../components/Navbar";
 import { VideoPlayer } from "../components/VideoPlayer";
+import PlayerContext  from "../contexts/PlayerContext";
 
 const Home: NextPage = () => {
+	const player = useContext(PlayerContext);
+
 	return (
 		<>
 			<Head>
@@ -14,7 +18,7 @@ const Home: NextPage = () => {
 			</Head>
 			<main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#000000]" >
 				<Navbar />
-				<VideoPlayer />
+				<VideoPlayer isPlaying={player.isPlaying} />
 			</main>
 		</>
 	);

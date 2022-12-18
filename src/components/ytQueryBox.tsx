@@ -3,16 +3,19 @@ import { getIDFromYTURL } from "../lib/getIDFromYTURL";
 import type { YTQueryType } from "../types/YTQueryType";
 import type { ResultItem, YTResult } from "../types/YTResult";
 import { trpc } from "../utils/trpc";
+import PlayerContext from "../contexts/PlayerContext";
 
 const YTQueryBox: React.FC = () => {
   const [keywordString, setKeywordString] = useState("");
+  console.log("query box");
+  console.log("keywordString", keywordString);
   const { data: ytQueryResponseData } = trpc.yt.queryYTVideos.useQuery({
     query: keywordString,
   });
 
   return (
     <InputBox
-      ytQueryResponseData={ytQueryResponseData}
+      ytQueryResponseData={ytQueryResponseData as YTResult}
       setKeywordString={setKeywordString}
     />
   );
@@ -25,13 +28,13 @@ const InputBox: React.FC<{
   setKeywordString: React.Dispatch<React.SetStateAction<string>>;
 }> = ({ ytQueryResponseData, setKeywordString }) => {
   const postVideo = trpc.videos.postVideo.useMutation();
-  const ytQueryType = useRef<YTQueryType>("TEXT");
+  const [ytQueryType, setYTQueryType] = useState<YTQueryType>("TEXT");
   const query = useRef("");
 
   const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    switch (ytQueryType.current) {
+    switch (ytQueryType) {
       case "TEXT":
         setKeywordString(query.current);
         break;
@@ -53,10 +56,10 @@ const InputBox: React.FC<{
     <div className="form-control">
       <div className="input-group flex-col">
         <div className="flex gap-2">
-          <QueryTypeSelector ytQueryTypeRef={ytQueryType} />
+          <QueryTypeSelector ytQueryType={ytQueryType} setYTQueryType={setYTQueryType} />
           <div className="flex flex-col">
             <TextQueryBox queryRef={query} />
-            {ytQueryType.current === "TEXT" ? (
+            {ytQueryType === "TEXT" ? (
               <CompletionResults
                 ytResult={ytQueryResponseData}
                 postVideo={postVideo}
@@ -70,18 +73,17 @@ const InputBox: React.FC<{
   );
 };
 
-const QueryTypeSelector: React.FC<{ ytQueryTypeRef: any }> = ({
-  ytQueryTypeRef,
+const QueryTypeSelector: React.FC<{ ytQueryType: YTQueryType, setYTQueryType: any }> = ({
+  ytQueryType, setYTQueryType,
 }) => {
-  const [ytQueryType, setYTQueryType] = useState<YTQueryType>("TEXT");
-
+  
   function handleSelectQuery(e: React.ChangeEvent<HTMLSelectElement>) {
     if (e.target.value === "Texto" && ytQueryType === "LINK") {
       setYTQueryType("TEXT");
-      ytQueryTypeRef.current = "TEXT";
+      // ytQueryTypeRef.current = "TEXT";
     } else {
       setYTQueryType("LINK");
-      ytQueryTypeRef.current = "LINK";
+      // ytQueryTypeRef.current = "LINK";
     }
   }
 
@@ -114,7 +116,8 @@ const TextQueryBox: React.FC<{ queryRef: any }> = ({ queryRef }) => {
   );
 };
 
-const ButtonQueryBox = ({ handleSubmit }) => {
+const ButtonQueryBox:React.FC <{handleSubmit: (e: React.MouseEvent<HTMLButtonElement>) => void
+}> = ({ handleSubmit }) => {
   return (
     <button onClick={(e) => handleSubmit(e)} className="btn-square btn">
       <svg
@@ -139,12 +142,17 @@ const CompletionItem: React.FC<{
   result: ResultItem;
   postVideo: any;
 }> = ({ result, postVideo }) => {
+  const player = React.useContext(PlayerContext);
   const handleClick = () => {
     postVideo.mutate({
       name: result.snippet.title,
       link: "https://www.youtube.com/watch?v=" + result.id.videoId,
       ytID: result.id.videoId,
     });
+    if(!player.isPlaying && !player.videos[0]) {
+      player.playVideo(result.id.videoId);
+      player.setIsPlaying(true);
+    }
   };
 
   const formatTitleString = (text: string) => {

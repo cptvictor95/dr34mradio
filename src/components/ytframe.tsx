@@ -7,7 +7,7 @@ declare global {
   }
 }
 
-export const YTiframe: React.FC<{}> = ({}) => {
+export const YTiframe: React.FC = () => {
   const player = useContext(PlayerContext);
 
   useEffect(() => {
@@ -24,9 +24,9 @@ export const YTiframe: React.FC<{}> = ({}) => {
       };
     }
 
-    return () => {
-      document.body.removeChild(script);
-    };
+    // return () => {
+    //  document.body.removeChild(script);
+    // };
   }, []);
 
   return <div id="ytplayer"></div>;

@@ -1,22 +1,16 @@
 import { YTiframe } from "./ytframe";
 import { trpc } from "../utils/trpc";
-import { useState, useEffect, useContext } from "react";
+import { useEffect, useContext } from "react";
 import type { BaseSyntheticEvent } from "react";
 import { ToggleSound } from "./ToggleSound";
 import PlayerContext from "../contexts/PlayerContext";
 import { VolumeBar } from "./VolumeBar";
 
-export const VideoPlayer: React.FC = () => {
+export const VideoPlayer: React.FC<{isPlaying: boolean}> = ({isPlaying}) => {
   const player = useContext(PlayerContext);
   // trpc video playlist queue
   const { data: videos, isLoading, refetch } = trpc.videos.getAll.useQuery();
-  const playVideo = trpc.videos.playVideo.useMutation();
-  const deleteVideo = trpc.videos.deleteVideo.useMutation();
-
-  // video player states
-  const [playerInSync, setPlayerInSync] = useState(false);
-  const [started, setStarted] = useState(false);
-
+  console.log("video player");
   useEffect(() => {
     console.log("estado", player.state.current)
     if (videos
@@ -24,10 +18,11 @@ export const VideoPlayer: React.FC = () => {
       && typeof window === "object") {
 
       }   
-  }, [player.state.current]);
+  }, [JSON.stringify(videos), isLoading]);
 
   return (
-    <div className="flex grow flex-row items-center justify-items-center">
+    <div className="flex indicator grow flex-row items-center justify-items-center">
+      {!player.isPlaying ? <div className="absolute bg-gray-500 h-full w-full text-white z-10">loading</div> : null}
       <div className="video indicator">
         <div className="absolute flex h-full w-full">
           <div>
@@ -37,15 +32,9 @@ export const VideoPlayer: React.FC = () => {
           <ToggleSound />
           <div>lado direito</div>
         </div>
-        {!isLoading && videos.length > 0 ?
           <YTiframe />
-          :
-          <div className="flex flex-col items-center justify-center">
-            <h1 className="text-2xl">Sem vídeos na fila</h1>
-            <h2 className="text-xl">Adicione um vídeo na caixa de busca</h2>
-            </div>}
-        
       </div>
+      
     </div>
   );
 };

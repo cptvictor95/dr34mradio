@@ -1,4 +1,4 @@
-import React, { createContext, useRef } from "react";
+import React, { createContext, useRef, useState } from "react";
 import { trpc } from "../utils/trpc";
 // TODO refactor this with the correct types
 const PlayerContext = createContext<any>({});
@@ -8,6 +8,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const { data: videos, isLoading, refetch } = trpc.videos.getAll.useQuery();
     const sendPlayVideo = trpc.videos.playVideo.useMutation();
     const deleteVideo = trpc.videos.deleteVideo.useMutation();
+    const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const videoPlayer = useRef<YT.Player | null>(null);
     const playerState = useRef<YT.PlayerState | null>(null);
     const playerInSync = useRef<boolean>(false);
@@ -43,7 +44,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // gets the id of the head of videos queue
     function headVideoID() {
-        if (videos && videos.length > 0) {
+        if (videos && videos[0]) {
             return videos[0].ytID;
         } else {
             return "M7lc1UVf-VE";
@@ -78,18 +79,25 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         playerVars: playerVars,
     }
 
-    function onPlayerReady(event) {
+    function onPlayerReady(event: YT.PlayerEvent) {
         event.target.setVolume(volume.current);
         event.target.playVideo();
     }
 
-    function onPlayerStateChange(event) {
+    function onPlayerStateChange(event: YT.OnStateChangeEvent) {
         playerState.current = event.data;
-        console.log("state", playerState.current);
+        
+        if(isLoading || !videos || !videos[0] || !videoPlayer.current)
+            return;
+    
         /* started playing */
         if (playerState.current === window.YT.PlayerState.PLAYING) {
+            
             /* checks if the video has started */
-            if (videos[0]?.started && !playerInSync.current) {
+            if (videos[0]) {
+                setIsPlaying(true);
+            }
+            if (videos[0].started && !playerInSync.current) {
                 /* jumps to current position */
                 /* gets startedPlayingAt */
                 /* and compares it with now */
@@ -113,23 +121,25 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (playerState.current === window.YT.PlayerState.ENDED &&
             videos[1]) {
             /* play next video */
-            videoPlayer.current.loadVideoById(videos[1].ytID);
+            videoPlayer.current?.loadVideoById(videos[1].ytID);
             /* delete previous video */
             deleteVideo.mutate({
                 id: videos[0].id,
             });
             /* TODO checks if it was successful */
             /* TODO resets queue index */
+            
             refetch();
         } else if (playerState.current === window.YT.PlayerState.ENDED &&
             videos[0]) {
             deleteVideo.mutate({
                 id: videos[0].id,
             });
+            setIsPlaying(false);
             refetch();
         }
-        if (playerState.current === window.YT.PlayerState.UNSTARTED) {
-            videoPlayer.current.loadVideoById(videos[0].ytID);
+        if (videoPlayer.current && playerState.current === window.YT.PlayerState.UNSTARTED) {
+            videoPlayer.current.loadVideoById(videos[0]?.ytID as string);
             console.log("videos", videos);
         }
     }
@@ -165,10 +175,12 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             toggleMute: toggleMute,
             isMuted: mute,
             changeVolume: changeVolume,
-            getVolume: videoPlayer.current ? videoPlayer.current.getVolume() : 0,
+            getVolume: videoPlayer.current ? videoPlayer.current.getVolume : 0,
             options: playerOptions,
             state: playerState,
             videos: videos,
+            isPlaying: isPlaying,
+            setIsPlaying: setIsPlaying,
         }}>
             {children}
         </PlayerContext.Provider>

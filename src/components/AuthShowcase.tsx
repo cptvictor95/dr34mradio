@@ -7,9 +7,9 @@ export const AuthShowcase: React.FC<{ sessionData: Session }> = ({
   sessionData,
 }) => {
   return (
-    <section className="z-10 flex flex-row items-center justify-center gap-4 rounded-full py-3 px-5 hover:cursor-pointer hover:backdrop-brightness-75">
+    <section className="z-20 flex flex-row items-center justify-center gap-4 rounded-full py-3 px-5 hover:cursor-pointer hover:backdrop-brightness-75">
       {sessionData && <span>{sessionData.user?.name}</span>}
-      <div className="dropdown-bottom dropdown-end dropdown z-10">
+      <div className="dropdown-bottom dropdown-end dropdown">
         <div tabIndex={0} className="rounded-full">
           <Image
             alt={`${
