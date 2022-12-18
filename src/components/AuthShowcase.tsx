@@ -7,6 +7,7 @@ export const AuthShowcase: React.FC<{ sessionData: Session }> = ({
   sessionData,
 }) => {
   console.log("USER", sessionData.user);
+
   return (
     <section className="z-10 flex flex-row items-center justify-center gap-4 rounded-full py-3 px-5 hover:cursor-pointer hover:backdrop-brightness-75">
       {sessionData && <span>{sessionData.user?.name}</span>}
