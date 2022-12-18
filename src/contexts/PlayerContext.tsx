@@ -2,7 +2,7 @@ import React, { createContext, useRef } from "react";
 const PlayerContext = createContext<any>({});
 
 export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const videoPlayer = React.useRef<YT.Player | null>(null);
+    const videoPlayer = useRef<YT.Player | null>(null);
     const playerState = useRef<YT.PlayerState | null>(null);
 
     const playerVars: YT.PlayerVars = {
@@ -66,8 +66,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             playVideo: playVideo,
             toggleMute: toggleMute,
             changeVolume: changeVolume,
-            playerOptions: playerOptions,
-            playerState: playerState
+            options: playerOptions,
+            state: playerState
         }}>
             {children}
         </PlayerContext.Provider>
