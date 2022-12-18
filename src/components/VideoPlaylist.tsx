@@ -17,7 +17,7 @@ export const VideoPlaylist: React.FC = ({}) => {
       <ul
         id="videoPlaylist"
         tabIndex={0}
-        className="dropdown-content menu w-1/4 min-w-max rounded-lg bg-gray-800 p-4"
+        className="dropdown-content menu flex min-w-max gap-2 rounded-lg bg-gray-800 p-4"
       >
         {videos?.length > 0
           ? videos?.map((vid: Video) => {
