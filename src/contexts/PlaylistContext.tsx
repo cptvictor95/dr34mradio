@@ -1,12 +1,13 @@
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import type { Video } from "@prisma/client";
 import { QueryClient, useQueryClient } from "@tanstack/react-query"
 import { trpc } from "../utils/trpc";
-import React from "react";
+import React, { useContext } from "react";
+import PlayerContext from "./PlayerContext";
 
-const PlaylistContext = createContext({});
+export const PlaylistContext = createContext<any>({});
 
-const updateCache = ({ client, data, }: {
+const updateCacheAdd = ({ client, data, }: {
     client: QueryClient;
     data: Video;
 }) => {
@@ -22,22 +23,44 @@ const updateCache = ({ client, data, }: {
 
 // provider
 export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const player = useContext(PlayerContext);
     const client = useQueryClient();
-    const { data: videos } = trpc.videos.getAll.useQuery();
-    const [playlist, setPlaylist] = useState([]);
+    const { data: videos, isLoading } = trpc.videos.getAll.useQuery();
+    const [playlist, setPlaylist] = useState<Video[]>(videos as Video[]);
     const [isPlaying, setIsPlaying] = useState(false);
-    const { mutateAsync } = trpc.videos.playVideo.useMutation({
-        onSuccess: (data) => {
-            updateCache({ client, data });
-        },
+    const { mutateAsync: mutateAsyncAdd,  } = trpc.videos.postVideo.useMutation({
+        onSuccess: (data) => updateCacheAdd({ client, data }),
     });
 
-    const values = React.useMemo(() => ({ playlist, setPlaylist, isPlaying, setIsPlaying }),
-        [playlist, setPlaylist, isPlaying, setIsPlaying]);
+    useEffect(() => {
+        console.log("playlist provider", videos);
+        setPlaylist(videos as Video[]);
+    }, [videos]);
+
+    const onAddVideo = ({link, name, ytID}) => {
+        mutateAsyncAdd({
+            link,
+            name,
+            ytID,
+        });
+    };
+
+    // const values = React.useMemo(() => ({ onAddVideo, playlist, setPlaylist, isPlaying, setIsPlaying }),
+     //  [playlist, isPlaying, isLoading]);
     return (
-        <PlaylistContext.Provider value={values}>
+        <PlaylistContext.Provider value={{
+            onAddVideo: onAddVideo, 
+        client: client,
+        playlist: playlist,
+        videos: videos,
+        isLoading: isLoading,
+        isPlaying: isPlaying,
+        setIsPlaying: setIsPlaying,
+        
+        }}>
             {children}
         </PlaylistContext.Provider>
     );
 }
 
+export default PlaylistContext;

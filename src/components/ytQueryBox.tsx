@@ -4,11 +4,10 @@ import type { YTQueryType } from "../types/YTQueryType";
 import type { ResultItem, YTResult } from "../types/YTResult";
 import { trpc } from "../utils/trpc";
 import PlayerContext from "../contexts/PlayerContext";
+import PlaylistContext from "../contexts/PlaylistContext";
 
 const YTQueryBox: React.FC = () => {
   const [keywordString, setKeywordString] = useState("");
-  console.log("query box");
-  console.log("keywordString", keywordString);
   const { data: ytQueryResponseData } = trpc.yt.queryYTVideos.useQuery({
     query: keywordString,
   });
@@ -27,13 +26,14 @@ const InputBox: React.FC<{
   ytQueryResponseData: YTResult;
   setKeywordString: React.Dispatch<React.SetStateAction<string>>;
 }> = ({ ytQueryResponseData, setKeywordString }) => {
+  const playlist = React.useContext(PlaylistContext);
   const postVideo = trpc.videos.postVideo.useMutation();
   const [ytQueryType, setYTQueryType] = useState<YTQueryType>("TEXT");
   const query = useRef("");
+  
 
   const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-
     switch (ytQueryType) {
       case "TEXT":
         setKeywordString(query.current);
@@ -42,10 +42,15 @@ const InputBox: React.FC<{
         const ytVideoID = getIDFromYTURL(query.current);
         /* fetch name, duration yt api */
         postVideo.mutate({
-          name: "asd",
+          name: "link",
           link: query.current,
           ytID: ytVideoID,
         });
+        playlist.onAddVideo({
+          name: "link",
+          link: query.current,
+          ytID: ytVideoID,
+        })
         break;
       default:
         break;
@@ -80,10 +85,8 @@ const QueryTypeSelector: React.FC<{ ytQueryType: YTQueryType, setYTQueryType: an
   function handleSelectQuery(e: React.ChangeEvent<HTMLSelectElement>) {
     if (e.target.value === "Texto" && ytQueryType === "LINK") {
       setYTQueryType("TEXT");
-      // ytQueryTypeRef.current = "TEXT";
     } else {
       setYTQueryType("LINK");
-      // ytQueryTypeRef.current = "LINK";
     }
   }
 
@@ -143,15 +146,20 @@ const CompletionItem: React.FC<{
   postVideo: any;
 }> = ({ result, postVideo }) => {
   const player = React.useContext(PlayerContext);
+  const playlist = React.useContext(PlaylistContext);
+  
   const handleClick = () => {
-    postVideo.mutate({
+    playlist.onAddVideo({
       name: result.snippet.title,
       link: "https://www.youtube.com/watch?v=" + result.id.videoId,
       ytID: result.id.videoId,
-    });
-    if(!player.isPlaying && !player.videos[0]) {
+    })
+  
+    // TODO sync video
+    if(!player.isPlaying() && !playlist.videos[0]) {
       player.playVideo(result.id.videoId);
-      player.setIsPlaying(true);
+    } else if (!player.isPlaying() && playlist.videos[0]) {
+      player.playVideo(playlist.videos[0].ytID);
     }
   };
 
@@ -191,8 +199,7 @@ const CompletionResults: React.FC<{
             result={result}
           />
         );
-      })}
-      ;
+      })};
     </div>
   );
 };

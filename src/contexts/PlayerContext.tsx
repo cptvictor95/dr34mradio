@@ -1,19 +1,130 @@
-import React, { createContext, useRef, useState } from "react";
+import React, { createContext, useRef, useState, useContext, useEffect } from "react";
+import PlaylistContext from "./PlaylistContext";
 import { trpc } from "../utils/trpc";
 // TODO refactor this with the correct types
 const PlayerContext = createContext<any>({});
 
-
 export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { data: videos, isLoading, refetch } = trpc.videos.getAll.useQuery();
+    const playlist = useContext(PlaylistContext);
     const sendPlayVideo = trpc.videos.playVideo.useMutation();
     const deleteVideo = trpc.videos.deleteVideo.useMutation();
-    const [isPlaying, setIsPlaying] = useState<boolean>(false);
-    const videoPlayer = useRef<YT.Player | null>(null);
     const playerState = useRef<YT.PlayerState | null>(null);
     const playerInSync = useRef<boolean>(false);
     const mute = useRef<boolean>(true);
     const volume = useRef<number>(15);
+
+    const videoPlayer = useRef<YT.Player | null>(null);
+    const [isReady, setIsReady] = useState<boolean>(false);
+    
+    useEffect(() => {
+        const script = document.createElement("script");
+        script.src = "https://www.youtube.com/iframe_api";
+        script.async = true;
+        document.body.appendChild(script);
+        
+        if (typeof window === "object") {
+          // esta função precisa ter este nome e ser global para funcionar
+          window.onYouTubePlayerAPIReady = () => {
+            const ytframe = "ytplayer";
+            videoPlayer.current = new window.YT.Player(ytframe, playerOptions);
+          };
+          setIsReady(true);
+        }
+    }, [isReady]);
+
+    useEffect(() => {
+        if (typeof window != "object"
+        && !isReady)
+            return;
+        
+        if (playerState.current === -1 
+            && playlist.videos 
+            && playlist.videos[0]
+            && !playlist.isPlaying) {
+            console.log("video player", videoPlayer.current);
+            console.log(playlist.videos[0].ytID)
+            videoPlayer.current?.loadVideoById(playlist.videos[0].ytID);
+            playlist.setIsPlaying(true);
+        }
+
+        if (playerState.current === 0) {
+            if (playlist.videos && playlist.videos[0]) {
+                deleteVideo.mutateAsync(playlist.videos[0].id);    
+            }
+            if (playlist.videos[1]) {
+                playVideo(playlist.videos[1].ytID);
+                sendPlayVideo.mutateAsync(playlist.videos[1].id);
+            }
+        }
+        /* video player finished playing */
+        if (playerState.current === 0 &&
+            playlist.videos[1]) {
+            /* play next video */
+            playVideo(playlist.videos[1].ytID);
+            /* delete previous video */
+            deleteVideo.mutate({
+                id: playlist.videos[0].id,
+            });
+            /* TODO checks if it was successful */
+            /* TODO resets queue index */
+        } else if (playerState.current === 0 &&
+            playlist.videos[0]) {
+            console.log("parou")
+            deleteVideo.mutate({
+                id: playlist.videos[0].id,
+            });
+        }
+
+        if (!playlist.playlist) {
+            console.log("no videos");
+            return;
+        }
+
+        if (videoPlayer.current === null) {
+            console.error("no videoPlayer");
+            return;
+        }
+
+        if (playerState.current === -1) {
+            playVideo(playlist.videos[0]?.ytID as string);
+            videoPlayer.current.playVideo();
+        }
+
+        /* started playing */
+        if (playerState.current === 1) {
+            /* gets current playing video */
+            let currentPlaying = videoPlayer.current.getVideoUrl()
+            /* gets video id */
+            currentPlaying = currentPlaying.split("v=")[1] as string;
+            // compares with the default video id
+            if (currentPlaying === "M7lc1UVf-VE") {
+                /* if it's the default video */
+                /* play the first video in the playlist */
+                playVideo(playlist.videos[0].ytID);
+            }
+            /* checks if the video has started */
+
+            if (playlist.videos[0].started && !playerInSync.current) {
+                /* jumps to current position */
+                /* gets startedPlayingAt */
+                /* and compares it with now */
+                let videoTime = Date.now() - Number(playlist.videos[0]?.startedPlayingAt);
+                videoTime = videoTime / 1000;
+                /* send it to player */
+                videoPlayer.current.seekTo(videoTime, true);
+                playerInSync.current = true;
+            } else if (playlist.videos[0].started === false) {
+                /* video hasn't started */
+                /* sends starting time to api */
+                /* changes video state to started */
+                sendPlayVideo.mutate({
+                    id: playlist.videos[0].id,
+                    startedPlayingAt: Date.now(),
+                });
+            }
+        }
+    }, [isReady, playerState.current, playlist.isLoading, playlist.videos]);
+
 
     const playerVars: YT.PlayerVars = {
         mute: 1,
@@ -44,8 +155,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // gets the id of the head of videos queue
     function headVideoID() {
-        if (videos && videos[0]) {
-            return videos[0].ytID;
+        if (playlist.videos && playlist.videos[0]) {
+            return playlist.videos[0].ytID;
         } else {
             return "M7lc1UVf-VE";
         }
@@ -86,65 +197,12 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     function onPlayerStateChange(event: YT.OnStateChangeEvent) {
         playerState.current = event.data;
-        
-        if(isLoading || !videos || !videos[0] || !videoPlayer.current)
-            return;
-    
-        /* started playing */
-        if (playerState.current === window.YT.PlayerState.PLAYING) {
-            
-            /* checks if the video has started */
-            if (videos[0]) {
-                setIsPlaying(true);
-            }
-            if (videos[0].started && !playerInSync.current) {
-                /* jumps to current position */
-                /* gets startedPlayingAt */
-                /* and compares it with now */
-                let videoTime = Date.now() - Number(videos[0]?.startedPlayingAt);
-                videoTime = videoTime / 1000;
-                /* send it to player */
-                videoPlayer.current.seekTo(videoTime, true);
-                playerInSync.current = true;
-            } else if (videos[0].started === false) {
-                /* video hasn't started */
-                /* sends starting time to api */
-                /* changes video state to started */
-                sendPlayVideo.mutate({
-                    id: videos[0].id,
-                    startedPlayingAt: Date.now(),
-                });
-            }
-        }
+        console.log("playerState: ", playerState.current);
 
-        /* video player finished playing */
-        if (playerState.current === window.YT.PlayerState.ENDED &&
-            videos[1]) {
-            /* play next video */
-            videoPlayer.current?.loadVideoById(videos[1].ytID);
-            /* delete previous video */
-            deleteVideo.mutate({
-                id: videos[0].id,
-            });
-            /* TODO checks if it was successful */
-            /* TODO resets queue index */
-            
-            refetch();
-        } else if (playerState.current === window.YT.PlayerState.ENDED &&
-            videos[0]) {
-            deleteVideo.mutate({
-                id: videos[0].id,
-            });
-            setIsPlaying(false);
-            refetch();
-        }
-        if (videoPlayer.current && playerState.current === window.YT.PlayerState.UNSTARTED) {
-            videoPlayer.current.loadVideoById(videos[0]?.ytID as string);
-            console.log("videos", videos);
-        }
     }
 
     // play video using yt iframe ref
+    // TODO sync video with api data
     const playVideo = (videoID: string) => {
         if (videoPlayer.current) {
             videoPlayer.current.loadVideoById(videoID);
@@ -159,14 +217,21 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     // change volume based on input value
-    const changeVolume = (volume: number) => {
+    const changeVolume = (input: number) => {
         if (videoPlayer.current) {
             if (videoPlayer.current.isMuted()) {
                 videoPlayer.current.unMute();
             }
-            videoPlayer.current.setVolume(volume);
+            videoPlayer.current.setVolume(input);
+            volume.current = input;
         }
     };
+
+    const isPlaying = () => {
+        console.log("isPlaying: ", playerState.current)
+        return playerState.current === 1
+            || playerState.current === 3;
+    }
 
     return (
         <PlayerContext.Provider value={{
@@ -175,12 +240,11 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             toggleMute: toggleMute,
             isMuted: mute,
             changeVolume: changeVolume,
-            getVolume: videoPlayer.current ? videoPlayer.current.getVolume : 0,
+            getVolume: volume.current,
             options: playerOptions,
             state: playerState,
-            videos: videos,
+            isPlayerReady: isReady,
             isPlaying: isPlaying,
-            setIsPlaying: setIsPlaying,
         }}>
             {children}
         </PlayerContext.Provider>

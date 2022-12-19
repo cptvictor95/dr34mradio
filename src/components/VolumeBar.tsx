@@ -3,23 +3,15 @@ import PlayerContext from "../contexts/PlayerContext";
 
 export const VolumeBar = () => {
     const player = useContext(PlayerContext);
-    const [volume, setVolume] = useState(0);
+    const [slider, setSlider] = useState(player.getVolume);
 
     function handleVolume(e: BaseSyntheticEvent) {
       if (player.videoPlayer != null) {
         player.changeVolume(e.target.value);
-        setVolume(e.target.value);
+        setSlider(e.target.value);
       }
     }
-
-    // make an useEffect to get the current volume
-    // and set it to the input value
-    useEffect(() => {
-        if (player.videoPlayer.current) {
-            setVolume(player.videoPlayer.getVolume);
-        }
-    }, []);
-  
+    
     return (
       <div>
         <input
@@ -27,7 +19,7 @@ export const VolumeBar = () => {
           type="range"
           min="0"
           max="100"
-          value={volume}
+          value={slider}
           className="range"
         />
       </div>
