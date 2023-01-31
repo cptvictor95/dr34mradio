@@ -12,7 +12,7 @@ const Home: NextPage = () => {
       </Head>
       <Main>
         <section className="min-h-[90vh] py-8">
-          <h1>Faça login pra continuar</h1>
+          <h1>Please log in to use the platform</h1>
         </section>
       </Main>
     </>

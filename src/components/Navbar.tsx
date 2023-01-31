@@ -29,7 +29,7 @@ export const Navbar: React.FC = () => {
             className="btn-primary btn min-w-max rounded-lg px-5 py-3 font-semibold text-white"
             onClick={() => signIn()}
           >
-            Sign In
+            Log In
           </button>
         ) : (
           ""
