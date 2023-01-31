@@ -1,7 +1,7 @@
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { AuthShowcase } from "./AuthShowcase";
-import { VideoPlaylist } from "./VideoPlaylist";
+import { RoomQueue } from "./RoomQueue";
 import YTQueryBox from "./ytQueryBox";
 
 export const Navbar: React.FC = () => {
@@ -21,12 +21,12 @@ export const Navbar: React.FC = () => {
       <section className="navbar-end gap-4">
         {sessionData ? (
           <>
-            <VideoPlaylist />
+            <RoomQueue />
             <AuthShowcase sessionData={sessionData} />
           </>
         ) : status !== "loading" ? (
           <button
-            className="btn-primary btn min-w-max rounded-lg px-5 py-3 font-semibold text-white"
+            className="btn btn-primary min-w-max rounded-lg px-5 py-3 font-semibold text-white"
             onClick={() => signIn()}
           >
             Log In

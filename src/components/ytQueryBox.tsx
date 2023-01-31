@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import { getIDFromYTURL } from "../lib/getIDFromYTURL";
 import type { YTQueryType } from "../types/YTQueryType";
 import type { ResultItem, YTResult } from "../types/YTResult";
@@ -26,21 +26,23 @@ const InputBox: React.FC<{
 }> = ({ ytQueryResponseData, setKeywordString }) => {
   const postVideo = trpc.videos.postVideo.useMutation();
   const ytQueryType = useRef<YTQueryType>("TEXT");
-  const query = useRef("");
+  const [query, setQuery] = useState("");
+
+  const handleInputChange = (key: string) => setQuery(key);
 
   const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
     switch (ytQueryType.current) {
       case "TEXT":
-        setKeywordString(query.current);
+        setKeywordString(query);
         break;
       case "LINK":
-        const ytVideoID = getIDFromYTURL(query.current);
+        const ytVideoID = getIDFromYTURL(query);
         /* fetch name, duration yt api */
         postVideo.mutate({
-          name: "asd",
-          link: query.current,
+          name: "to be filled",
+          link: query,
           ytID: ytVideoID,
         });
         break;
@@ -49,22 +51,27 @@ const InputBox: React.FC<{
     }
   };
 
+  console.log("QUERY", query);
+
   return (
-    <div className="form-control">
-      <div className="input-group flex-col">
-        <div className="flex gap-2">
-          <QueryTypeSelector ytQueryTypeRef={ytQueryType} />
-          <div className="flex flex-col">
-            <TextQueryBox queryRef={query} />
-            {ytQueryType.current === "TEXT" ? (
-              <CompletionResults
-                ytResult={ytQueryResponseData}
-                postVideo={postVideo}
-              />
-            ) : null}
-          </div>
-          <ButtonQueryBox handleSubmit={handleSubmit} />
-        </div>
+    <div className="flex gap-2">
+      <QueryTypeSelector ytQueryTypeRef={ytQueryType} />
+      <div className="input-group">
+        <input
+          type="text"
+          placeholder="Busca…"
+          onChange={(e) => handleInputChange(e.target.value)}
+          value={query}
+          className="input-bordered input text-white"
+        />
+
+        <ButtonQueryBox handleSubmit={handleSubmit} />
+        {ytQueryType.current === "TEXT" ? (
+          <CompletionResults
+            ytResult={ytQueryResponseData}
+            postVideo={postVideo}
+          />
+        ) : null}
       </div>
     </div>
   );
@@ -88,28 +95,12 @@ const QueryTypeSelector: React.FC<{ ytQueryTypeRef: any }> = ({
   return (
     <select
       onChange={(e) => handleSelectQuery(e)}
-      className="select-bordered select text-white"
+      className="select-bordered select max-w-[100px] text-white"
     >
       <option disabled>Tipo de busca</option>
       <option defaultValue="true">Texto</option>
       <option>Link</option>
     </select>
-  );
-};
-
-const TextQueryBox: React.FC<{ queryRef: any }> = ({ queryRef }) => {
-  const handleChange = (key: string) => {
-    setQuery(key);
-  };
-  const [query, setQuery] = useState("");
-  return (
-    <input
-      type="text"
-      placeholder="Busca…"
-      onChange={(e) => handleChange(e.target.value)}
-      value={query}
-      className="input-bordered input text-white"
-    />
   );
 };
 
