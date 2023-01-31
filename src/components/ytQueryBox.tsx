@@ -1,8 +1,9 @@
-import React, { useState, useRef, useMemo } from "react";
-import { getIDFromYTURL } from "../lib/getIDFromYTURL";
+import React, { useState, useRef, useMemo, useEffect } from "react";
+import { getIDFromURL } from "../lib/getIDFromYTURL";
 import type { YTQueryType } from "../types/YTQueryType";
 import type { ResultItem, YTResult } from "../types/YTResult";
 import { trpc } from "../utils/trpc";
+import { debounce } from "lodash";
 
 const YTQueryBox: React.FC = () => {
   const [keywordString, setKeywordString] = useState("");
@@ -27,6 +28,7 @@ const InputBox: React.FC<{
   const postVideo = trpc.videos.postVideo.useMutation();
   const ytQueryType = useRef<YTQueryType>("TEXT");
   const [query, setQuery] = useState("");
+  const [isResultListOpen, setIsResultListOpen] = useState(false);
 
   const handleInputChange = (key: string) => setQuery(key);
 
@@ -38,7 +40,7 @@ const InputBox: React.FC<{
         setKeywordString(query);
         break;
       case "LINK":
-        const ytVideoID = getIDFromYTURL(query);
+        const ytVideoID = getIDFromURL(query);
         /* fetch name, duration yt api */
         postVideo.mutate({
           name: "to be filled",
@@ -51,7 +53,15 @@ const InputBox: React.FC<{
     }
   };
 
-  console.log("QUERY", query);
+  useEffect(() => {
+    // debounce(() => {
+    if (query.length == 0 && ytQueryType.current === "TEXT") {
+      setIsResultListOpen(false);
+    } else {
+      setIsResultListOpen(true);
+    }
+    // }, 1000);
+  }, [ytQueryType, query]);
 
   return (
     <div className="flex gap-2">
@@ -66,20 +76,20 @@ const InputBox: React.FC<{
         />
 
         <ButtonQueryBox handleSubmit={handleSubmit} />
-        {ytQueryType.current === "TEXT" ? (
+        {isResultListOpen && (
           <CompletionResults
             ytResult={ytQueryResponseData}
             postVideo={postVideo}
           />
-        ) : null}
+        )}
       </div>
     </div>
   );
 };
 
-const QueryTypeSelector: React.FC<{ ytQueryTypeRef: any }> = ({
-  ytQueryTypeRef,
-}) => {
+const QueryTypeSelector: React.FC<{
+  ytQueryTypeRef: React.MutableRefObject<YTQueryType>;
+}> = ({ ytQueryTypeRef }) => {
   const [ytQueryType, setYTQueryType] = useState<YTQueryType>("TEXT");
 
   function handleSelectQuery(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -106,7 +116,7 @@ const QueryTypeSelector: React.FC<{ ytQueryTypeRef: any }> = ({
 
 const ButtonQueryBox = ({ handleSubmit }) => {
   return (
-    <button onClick={(e) => handleSubmit(e)} className="btn-square btn">
+    <button onClick={(e) => handleSubmit(e)} className="btn btn-square">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         className="h-6 w-6"
@@ -174,7 +184,6 @@ const CompletionResults: React.FC<{
           />
         );
       })}
-      ;
     </div>
   );
 };

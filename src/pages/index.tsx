@@ -1,5 +1,6 @@
 import { type NextPage } from "next";
 import Head from "next/head";
+import { HomeDashboard } from "../components/HomeDashboard";
 import { Main } from "../layouts/Main";
 
 const Home: NextPage = () => {
@@ -11,9 +12,7 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Main>
-        <section className="min-h-[90vh] py-8">
-          <h1>Please log in to use the platform</h1>
-        </section>
+        <HomeDashboard />
       </Main>
     </>
   );
