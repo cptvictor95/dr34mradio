@@ -1,13 +1,13 @@
-import React, { useState, useRef, useMemo, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { getIDFromURL } from "../lib/getIDFromYTURL";
 import type { YTQueryType } from "../types/YTQueryType";
 import type { ResultItem, YTResult } from "../types/YTResult";
 import { trpc } from "../utils/trpc";
-import { debounce } from "lodash";
 import { QueryTypeSelector } from "./QueryTypeSelector";
 import { ButtonQueryBox } from "./ButtonQueryBox";
+import { debounce } from "lodash";
 
-const YTQueryBox: React.FC = () => {
+export const SearchBar: React.FC = () => {
   const [keywordString, setKeywordString] = useState("");
   const { data: ytQueryResponseData } = trpc.yt.queryYTVideos.useQuery({
     query: keywordString,
@@ -21,8 +21,6 @@ const YTQueryBox: React.FC = () => {
   );
 };
 
-export default YTQueryBox;
-
 const InputBox: React.FC<{
   ytQueryResponseData: YTResult;
   setKeywordString: React.Dispatch<React.SetStateAction<string>>;
@@ -34,35 +32,37 @@ const InputBox: React.FC<{
 
   const handleInputChange = (key: string) => setQuery(key);
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
+  const handleSubmit = useMemo(
+    () =>
+      debounce((e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
 
-    switch (ytQueryType.current) {
-      case "TEXT":
-        setKeywordString(query);
-        break;
-      case "LINK":
-        const ytVideoID = getIDFromURL(query);
-        /* fetch name, duration yt api */
-        postVideo.mutate({
-          name: "to be filled",
-          link: query,
-          ytID: ytVideoID,
-        });
-        break;
-      default:
-        break;
-    }
-  };
+        switch (ytQueryType.current) {
+          case "TEXT":
+            setKeywordString(query);
+            break;
+          case "LINK":
+            const ytVideoID = getIDFromURL(query);
+            /* fetch name, duration yt api */
+            postVideo.mutate({
+              name: "to be filled",
+              link: query,
+              ytID: ytVideoID,
+            });
+            break;
+          default:
+            break;
+        }
+      }, 1000),
+    [query, setKeywordString, postVideo]
+  );
 
   useEffect(() => {
-    // debounce(() => {
     if (query.length == 0 && ytQueryType.current === "TEXT") {
       setIsResultListOpen(false);
     } else {
       setIsResultListOpen(true);
     }
-    // }, 1000);
   }, [ytQueryType, query]);
 
   return (

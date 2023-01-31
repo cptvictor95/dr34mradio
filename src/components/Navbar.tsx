@@ -2,7 +2,7 @@ import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { NavbarAuth } from "./NavbarAuth";
 import { RoomQueue } from "./RoomQueue";
-import YTQueryBox from "./ytQueryBox";
+import { SearchBar } from "./SearchBar";
 
 export const Navbar: React.FC = () => {
   const router = useRouter();
@@ -15,7 +15,7 @@ export const Navbar: React.FC = () => {
       </div>
 
       <section className="navbar-center">
-        <YTQueryBox />
+        <SearchBar />
       </section>
 
       <section className="navbar-end gap-4">
