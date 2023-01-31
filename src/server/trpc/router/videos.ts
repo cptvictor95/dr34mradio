@@ -12,8 +12,6 @@ export const videosRouter = router({
       })
     )
     .mutation(({ ctx, input }) => {
-      console.log("input", input);
-
       const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${input?.ytID}&key=${process.env.YOUTUBE_API_KEY}`;
       const fetchYTData = fetch(url)
         .then((response) => {
@@ -23,11 +21,11 @@ export const videosRouter = router({
           if (json.pageInfo.totalResults > 0) return json.items[0];
         })
         .then((json) => {
-          console.log(json.snippet.title);
+          const videoName = json.snippet.title;
           if (typeof json.snippet.title != "undefined") {
             return ctx.prisma.video.create({
               data: {
-                name: json.snippet.title,
+                name: videoName,
                 link: `${input?.link}`,
                 ytID: `${input?.ytID}`,
               },
@@ -52,7 +50,6 @@ export const videosRouter = router({
       })
     )
     .mutation(({ ctx, input }) => {
-      console.log("input", input);
       return ctx.prisma.video.update({
         where: {
           id: `${input?.id}`,
