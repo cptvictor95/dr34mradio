@@ -9,7 +9,7 @@ export const Navbar: React.FC = () => {
   const { data: sessionData, status } = useSession();
 
   return (
-    <nav className="navbar py-0 px-10 text-white">
+    <nav className="navbar h-[10vh] py-0 px-10 text-white">
       <div className="navbar-start">
         <button onClick={() => router.push("/")}>dr34m Radio</button>
       </div>
@@ -26,7 +26,7 @@ export const Navbar: React.FC = () => {
           </>
         ) : status !== "loading" ? (
           <button
-            className="btn-accent btn min-w-max rounded-lg px-5 py-3 font-semibold text-white"
+            className="btn-primary btn min-w-max rounded-lg px-5 py-3 font-semibold text-white"
             onClick={() => signIn()}
           >
             Sign In
