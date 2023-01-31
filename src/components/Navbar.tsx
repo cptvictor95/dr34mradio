@@ -1,6 +1,6 @@
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
-import { AuthShowcase } from "./AuthShowcase";
+import { NavbarAuth } from "./NavbarAuth";
 import { RoomQueue } from "./RoomQueue";
 import YTQueryBox from "./ytQueryBox";
 
@@ -22,7 +22,7 @@ export const Navbar: React.FC = () => {
         {sessionData ? (
           <>
             <RoomQueue />
-            <AuthShowcase sessionData={sessionData} />
+            <NavbarAuth sessionData={sessionData} />
           </>
         ) : status !== "loading" ? (
           <button

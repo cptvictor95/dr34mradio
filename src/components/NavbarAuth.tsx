@@ -3,7 +3,7 @@ import { signOut } from "next-auth/react";
 import Image from "next/image";
 import { SignOut } from "phosphor-react";
 
-export const AuthShowcase: React.FC<{ sessionData: Session }> = ({
+export const NavbarAuth: React.FC<{ sessionData: Session }> = ({
   sessionData,
 }) => {
   return (
