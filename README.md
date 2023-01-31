@@ -1,28 +1,80 @@
-# Create T3 App
+# Use cases (Pages and features)
+- Home (logged out)
+  - Authentication form
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+- Home (logged in)
+  - List of rooms
 
-## What's next? How do I make an app with this?
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+- Room
+  - Video player
+  - Room settings
+    - Public room
+    - Private room
+      - Password
+    - Change room's name (when changing room's name, slug should be regenerated)
+    - Room permission for mods
+    - Limit maximum duration for each video in the queue
+  
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+- User profile
+  - Change name
+  - Change avatar
+  - Current authentication providers
+  - My rooms
+  - My Playlists
+  - Logout
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
 
-## Learn More
+- Room Video player
+  - Add videos from users playlists to room's queue
+  - Search youtube video by:
+    - Video URL
+    - Video Name
+  - Search Spotify music by:
+    - Song Url
+    - Song Name
+  - Song queue
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+# Entities
 
-## How do I deploy this?
+### user
+- uid
+- name
+- username
+- avatarUrl
+- createdAt
+- providerCredentials
+- playlists
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+### room
+- uid
+- slug
+- name
+- creator
+- queue
+- createdAt
+- updatedAt
+- voteSkipCount
+- maxVideoDuration
+- currentUsers
+- isPrivate
+- password
+
+### queue
+- uid
+- videos
+  
+### playlist
+- uid
+- owner
+- videos
+  
+### video
+- uid
+- url
+- duration
+- startedPlayingAt
+- likes
