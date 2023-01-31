@@ -4,8 +4,10 @@ import type { YTQueryType } from "../types/YTQueryType";
 import type { ResultItem, YTResult } from "../types/YTResult";
 import { trpc } from "../utils/trpc";
 import { QueryTypeSelector } from "./QueryTypeSelector";
-import { ButtonQueryBox } from "./ButtonQueryBox";
+import { SearchBarButton } from "./SearchBarButton";
 import { debounce } from "lodash";
+import { Video } from "@prisma/client";
+import { QueryClient, useQueryClient } from "@tanstack/react-query";
 
 export const SearchBar: React.FC = () => {
   const [keywordString, setKeywordString] = useState("");
@@ -21,11 +23,36 @@ export const SearchBar: React.FC = () => {
   );
 };
 
+const updateCache = ({
+  client,
+  data,
+}: {
+  client: QueryClient;
+  data: Video;
+}) => {
+  client.setQueryData(
+    [["yt", "queryYTVideos"], { input: { query: data.name }, type: "query" }],
+    (oldData) => {
+      const newData = oldData as Video[];
+
+      console.log("NEW DATA", newData);
+
+      return [...newData, data];
+    }
+  );
+};
+
 const InputBox: React.FC<{
   ytQueryResponseData: YTResult;
   setKeywordString: React.Dispatch<React.SetStateAction<string>>;
 }> = ({ ytQueryResponseData, setKeywordString }) => {
-  const postVideo = trpc.videos.postVideo.useMutation();
+  const client = useQueryClient();
+  const postVideo = trpc.videos.postVideo.useMutation({
+    onSuccess: (data) => {
+      console.log("ON SUCCESS DATA", data);
+      updateCache({ client, data });
+    },
+  });
   const ytQueryType = useRef<YTQueryType>("TEXT");
   const [query, setQuery] = useState("");
   const [isResultListOpen, setIsResultListOpen] = useState(false);
@@ -53,7 +80,7 @@ const InputBox: React.FC<{
           default:
             break;
         }
-      }, 1000),
+      }, 500),
     [query, setKeywordString, postVideo]
   );
 
@@ -77,12 +104,14 @@ const InputBox: React.FC<{
           className="input-bordered input text-white"
         />
 
-        <ButtonQueryBox handleSubmit={handleSubmit} />
-        {isResultListOpen && (
+        <SearchBarButton handleSubmit={handleSubmit} />
+        {isResultListOpen ? (
           <CompletionResults
             ytResult={ytQueryResponseData}
             postVideo={postVideo}
           />
+        ) : (
+          <></>
         )}
       </div>
     </div>
@@ -125,7 +154,7 @@ const CompletionResults: React.FC<{
   ytResult: YTResult;
   postVideo: any;
 }> = ({ ytResult, postVideo }) => {
-  if (ytResult === undefined) return null;
+  if (ytResult === undefined || !ytResult.items) return null;
 
   return (
     <div className="absolute top-16 z-50 flex flex-col">

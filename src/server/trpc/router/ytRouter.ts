@@ -26,7 +26,6 @@ export const ytRouter = router({
       })
     )
     .query(({ input }) => {
-      console.log(" youtube videos", input);
       const keywordString = `${input?.query}`.replace(/\s/g, "+");
       const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${keywordString}&type=video&key=${process.env.YOUTUBE_API_KEY}`;
       // const queryResponse = mockAPIYT;

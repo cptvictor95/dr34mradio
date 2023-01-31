@@ -1,4 +1,4 @@
-export const ButtonQueryBox: React.FC<{
+export const SearchBarButton: React.FC<{
   handleSubmit: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }> = ({ handleSubmit }) => {
   return (
