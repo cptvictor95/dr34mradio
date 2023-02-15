@@ -156,11 +156,14 @@ const CompletionItem: React.FC<{
     })
   
     // TODO sync video
-    if(!player.isPlaying() && !playlist.videos[0]) {
-      player.playVideo(result.id.videoId);
-    } else if (!player.isPlaying() && playlist.videos[0]) {
-      player.playVideo(playlist.videos[0].ytID);
+    if (!player.isPlaying()) {
+        if(!playlist.videos[0]) {
+          player.playVideo(result.id.videoId);
+        } else if (playlist.videos[0]) {
+          player.playVideo(playlist.videos[0].ytID);
+        }
     }
+    
   };
 
   const formatTitleString = (text: string) => {
