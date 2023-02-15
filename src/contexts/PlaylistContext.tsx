@@ -56,7 +56,6 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         isLoading: isLoading,
         isPlaying: isPlaying,
         setIsPlaying: setIsPlaying,
-        
         }}>
             {children}
         </PlaylistContext.Provider>
