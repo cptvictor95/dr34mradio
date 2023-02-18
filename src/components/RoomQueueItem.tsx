@@ -25,7 +25,7 @@ const updateCache = ({
   );
 };
 
-export const VideoPlaylistItem: React.FC<{
+export const RoomQueueItem: React.FC<{
   video: Video;
   client: QueryClient;
 }> = ({ video, client }) => {
