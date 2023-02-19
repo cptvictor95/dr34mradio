@@ -1,23 +1,24 @@
-import { useState } from "react";
-export const ToggleSound: React.FC<{videoPlayer: any}> = ({videoPlayer}) => {
-    const [mute, setMute] = useState(true);
-    function toggleSound() {
-        if (mute) {
-            videoPlayer.unMute();
-        } else {
-            videoPlayer.mute();
+import { useState, useContext } from "react";
+import PlayerContext from "../contexts/PlayerContext";
+
+export const ToggleSound: React.FC = () => {
+    const player = useContext(PlayerContext);
+    // TODO send this state to the player context so that it can be used in the volume bar
+    const [mute, setMute] = useState<boolean>(player.isMuted.current);
+    
+    function toggleMute() {
+        if (player.videoPlayer != null) {
+            player.toggleMute();
+            setMute(!mute);
         }
-        setMute(!mute);
     }
 
     return (
-        <div className="grow"
-        onClick={toggleSound}
-    >
-<div className="absolute inset-1/2">
-        {mute ? <AudioOffIcon /> : null}
-    </div>
-    </div>
+        <div className="grow" onClick={toggleMute}>
+            <div className="absolute inset-1/2">
+                {mute ? <AudioOffIcon /> : null}
+            </div>
+        </div>
     );
 };
 
