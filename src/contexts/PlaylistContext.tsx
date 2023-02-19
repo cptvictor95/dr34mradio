@@ -4,6 +4,7 @@ import { QueryClient, useQueryClient } from "@tanstack/react-query"
 import { trpc } from "../utils/trpc";
 import React, { useContext } from "react";
 import PlayerContext from "./PlayerContext";
+import { string } from "zod";
 
 export const PlaylistContext = createContext<any>({});
 
@@ -37,7 +38,7 @@ export const PlaylistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setPlaylist(videos as Video[]);
     }, [videos]);
 
-    const onAddVideo = ({link, name, ytID}) => {
+    const onAddVideo = ({link, name, ytID} : {link: string, name: string, ytID: string}) => {
         mutateAsyncAdd({
             link,
             name,
